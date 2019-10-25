@@ -1,0 +1,4 @@
+class MessagesModel
+tpl listmodel
+prop int id
+prop QString text

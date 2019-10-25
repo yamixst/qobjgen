@@ -1,0 +1,1 @@
+./qobjgen.py -o example/out examples/*.qobj

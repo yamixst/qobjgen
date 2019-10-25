@@ -1,0 +1,7 @@
+class Settings
+tpl settings
+var section main
+prop bool debug R qvartype Bool default false
+prop QString host qvartype String section network default "localhost"
+prop QString username qvartype String section auth
+prop QString password qvartype String section auth

@@ -1,0 +1,3 @@
+class Message
+prop int id RN
+prop QString text RWN
