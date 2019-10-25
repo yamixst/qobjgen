@@ -1,6 +1,7 @@
 #include "{{ cls.name|lower }}.h"
 
-{{ cls.name }}::{{ cls.name }}({{ cls.base }} *parent) : {{ cls.base }}(parent)
+{{ cls.name }}::{{ cls.name }}({{ cls.base }} *parent)
+    : {{ cls.base }}(parent)
 {
 
 }

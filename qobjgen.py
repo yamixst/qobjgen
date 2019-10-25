@@ -5,24 +5,17 @@ import os
 import re
 import jinja2
 
-app_dir = os.path.dirname(__file__)
-templates_dir = os.path.join(app_dir, 'templates')
-
-env = jinja2.Environment(
-    loader=jinja2.FileSystemLoader(templates_dir)
-)
-
-env.trim_blocks = True
-
 
 def firstLower(s):
     return s[0].lower() + s[1:]
 
-
 def firstUpper(s):
     return s[0].upper() + s[1:]
 
-
+app_dir = os.path.dirname(__file__)
+templates_dir = os.path.join(app_dir, 'templates')
+env = jinja2.Environment(loader=jinja2.FileSystemLoader(templates_dir))
+env.trim_blocks = True
 env.filters['firstLower'] = firstLower
 env.filters['firstUpper'] = firstUpper
 
@@ -36,20 +29,20 @@ class QObjectProperty:
         self.write = access.upper().find('W') != -1
         self.notify = access.upper().find('N') != -1
         self.vars = vars
-
-        print(self.__dict__)
+        # print(self.__dict__)
 
 
 class QObjectClass:
 
     def __init__(self):
         self.tpl = 'qobject'
-        self.name = self.__class__.__name__
+        self.name = 'Unknown'
         self.base = 'QObject'
         self.props = [] # [QObjectProperty,]
         self.vars = {}
 
     def load(self, qobj_path):
+        self.name = os.path.splitext(os.path.basename(qobj_path))[0]
 
         with open(qobj_path, 'r') as qobj_file:
             for line, text in enumerate(qobj_file):
@@ -86,7 +79,6 @@ class QObjectClass:
                     self.vars[args[0]] = text.split(maxsplit=2)[2]
 
                 elif cmd == 'prop' or cmd == 'property':
-
                     if len(args) < 2:
                         print('Error: Too few arguments in a line {0}: {1}'.format(line, text))
                         continue
@@ -108,27 +100,17 @@ class QObjectClass:
                 else:
                     print('Error: Unknown instruction on line {0}: {1}'.format(line, text))
 
-class Message:
-
-    tpl = 'qobject'
-    name = 'Message'
-    base = 'QObject'
-    props = [
-        QObjectProperty('int', 'id', 'RWN'),
-        QObjectProperty('QString', 'text', 'RWN'),
-    ]
-
 
 def jinja_generate(tpl_path, context, out_path):
     template = env.get_template(tpl_path)
     content = template.render(context)
+
     with open(out_path, 'w') as file:
         file.write(content)
 
 
 def qobjgen(qobj_path, out_dir):
     qobjcls = QObjectClass()
-
     qobjcls.load(qobj_path)
 
     jinja_generate(qobjcls.tpl + '_h.tpl',   {'cls': qobjcls}, os.path.join(out_dir, qobjcls.name.lower() + '.qobj.h'))
@@ -137,23 +119,34 @@ def qobjgen(qobj_path, out_dir):
 
 if __name__ == "__main__":
     
-    if not 1 < len(sys.argv) < 4:
-        print("Using: qobjgen QOBJFILE [OUTDIR]")
+    if len(sys.argv) < 2:
+        print("Using: qobjgen [-o OUTDIR] QOBJFILE...")
         sys.exit(1)
 
-    qobj_path = sys.argv[1]
-
-    if not os.path.isfile(qobj_path):
-        print('Error: File "{0}" not exists'.format(qobj_path))
-        sys.exit(2)
-    
-    if len(sys.argv) == 3:
+    if sys.argv[1] == '-o':
         out_dir = sys.argv[2]
+        qobj_paths = sys.argv[3:]
     else:
-        out_dir = os.path.dirname(qobj_path)
+        out_dir = ''
+        qobj_paths = sys.argv[1:]
 
-    if not os.path.isdir(out_dir):
-        print('Error: Directory "{0}" not exists'.format(out_dir))
-        sys.exit(3)
+    retcode = 0
 
-    qobjgen(qobj_path, out_dir)
+    for qobj_path in qobj_paths:
+        if not os.path.isfile(qobj_path):
+            print('Error: File "{0}" not exists'.format(qobj_path))
+            retcode = 2
+            continue
+
+        print('Proccessing "{0}"...'.format(qobj_path))
+
+        if out_dir == '':
+            out_dir = os.path.dirname(qobj_path)
+
+        if not os.path.isdir(out_dir):
+            print('Error: Directory "{0}" not exists'.format(out_dir))
+            sys.exit(1)
+        
+        qobjgen(qobj_path, out_dir)
+
+    sys.exit(retcode)
