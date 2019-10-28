@@ -27,7 +27,7 @@ public slots:
 {% for prop in cls.props %}
     void set{{ prop.name|firstUpper }}(const {{ prop.type }} &{{ prop.name }});
 {% endfor %}
-    
+
 private:
     QSettings m_settings;
 };

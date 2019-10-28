@@ -27,7 +27,7 @@ public slots:
 {% for prop in cls.props %}{% if prop.write %}
     void set{{ prop.name|firstUpper }}(const {{ prop.type }} &{{ prop.name }});
 {% endif %}{% endfor %}
-    
+
 private:
 {% for prop in cls.props %}
     {{ prop.type }} m_{{ prop.name }};
