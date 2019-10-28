@@ -14,19 +14,19 @@ class {{ cls.name }} : public {{ cls.base }}
 public:
     explicit {{ cls.name }}({{ cls.base }} *parent = nullptr);
 
-{% for prop in cls.props %}
+{% for prop in cls.props %}{% if prop.read %}
     {{ prop.type }} {{ prop.name }}() const;
-{% endfor %}
+{% endif %}{% endfor %}
 
 signals:
-{% for prop in cls.props %}
+{% for prop in cls.props %}{% if prop.notify %}
     void {{ prop.name }}Changed();
-{% endfor %}
+{% endif %}{% endfor %}
 
 public slots:
-{% for prop in cls.props %}
+{% for prop in cls.props %}{% if prop.write %}
     void set{{ prop.name|firstUpper }}(const {{ prop.type }} &{{ prop.name }});
-{% endfor %}
+{% endif %}{% endfor %}
     
 private:
 {% for prop in cls.props %}

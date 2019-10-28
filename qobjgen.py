@@ -1,23 +1,8 @@
 #!/usr/bin/python3
 
-import sys
-import os
-import re
+import sys, os, re
+import argparse
 import jinja2
-
-
-def firstLower(s):
-    return s[0].lower() + s[1:]
-
-def firstUpper(s):
-    return s[0].upper() + s[1:]
-
-app_dir = os.path.dirname(__file__)
-templates_dir = os.path.join(app_dir, 'templates')
-env = jinja2.Environment(loader=jinja2.FileSystemLoader(templates_dir))
-env.trim_blocks = True
-env.filters['firstLower'] = firstLower
-env.filters['firstUpper'] = firstUpper
 
 
 class QObjectProperty:
@@ -29,7 +14,6 @@ class QObjectProperty:
         self.write = access.upper().find('W') != -1
         self.notify = access.upper().find('N') != -1
         self.vars = vars
-        # print(self.__dict__)
 
 
 class QObjectClass:
@@ -101,44 +85,76 @@ class QObjectClass:
                     print('Error: Unknown instruction on line {0}: {1}'.format(line, text))
 
 
-def jinja_generate(tpl_path, context, out_path):
-    template = env.get_template(tpl_path)
-    content = template.render(context)
+class QObjectGenerator:
 
-    with open(out_path, 'w') as file:
-        file.write(content)
+    def __init__(self, tpl_dir=''):
+        def firstLower(s):
+            return s[0].lower() + s[1:]
 
+        def firstUpper(s):
+            return s[0].upper() + s[1:]
 
-def qobjgen(qobj_path, out_dir):
-    qobjcls = QObjectClass()
-    qobjcls.load(qobj_path)
+        if tpl_dir == '':
+            app_dir = os.path.dirname(__file__)
+            templates_dir = os.path.join(app_dir, 'templates')
+        else:
+            templates_dir = tpl_dir
 
-    jinja_generate(qobjcls.tpl + '_h.tpl',   {'cls': qobjcls}, os.path.join(out_dir, qobjcls.name.lower() + '.qobj.h'))
-    jinja_generate(qobjcls.tpl + '_cpp.tpl', {'cls': qobjcls}, os.path.join(out_dir, qobjcls.name.lower() + '.qobj.cpp'))
+        self.env = jinja2.Environment(loader=jinja2.FileSystemLoader(templates_dir))
+        self.env.trim_blocks = True
+        self.env.filters['firstLower'] = firstLower
+        self.env.filters['firstUpper'] = firstUpper
+
+    def _jinja_render(self, tpl_path, context, out_path):
+        template = self.env.get_template(tpl_path)
+        content = template.render(context)
+
+        with open(out_path, 'w') as file:
+            file.write(content)
+
+        print('    Success {0}'.format(out_path))
+
+    def generate(self, qobj_path, out_dir, suffix='.qobj', replace=True):
+        qobjcls = QObjectClass()
+        qobjcls.load(qobj_path)
+
+        for ext in ('h', 'cpp'):
+            out_path = os.path.join(out_dir, qobjcls.name.lower() + suffix + '.' + ext)
+            if not replace and os.path.exists(out_path):
+                print('Error: File already exists: ' + out_path)
+            else:
+                self._jinja_render(qobjcls.tpl + '_' + ext + '.tpl', {'cls': qobjcls}, out_path)
 
 
 if __name__ == "__main__":
-    
-    if len(sys.argv) < 2:
-        print("Using: qobjgen [-o OUTDIR] QOBJFILE...")
-        sys.exit(1)
 
-    if sys.argv[1] == '-o':
-        out_dir = sys.argv[2]
-        qobj_paths = sys.argv[3:]
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("--tpldir", default='')
+    group = parser.add_mutually_exclusive_group(required=False)
+    group.add_argument("--nosuffix", action='store_true')
+    group.add_argument("--suffix",  default='.qobj')
+    parser.add_argument("-r", "--replace", action='store_true')
+    parser.add_argument("-o", "--outdir", default='')
+    parser.add_argument("qobjfile", nargs="+")
+
+    args = parser.parse_args()
+
+    if not args.nosuffix:
+        suffix = args.suffix
     else:
-        out_dir = ''
-        qobj_paths = sys.argv[1:]
+        suffix = ''
 
-    retcode = 0
+    out_dir = args.outdir
 
-    for qobj_path in qobj_paths:
+    qobjgen = QObjectGenerator(args.tpldir)
+
+    for qobj_path in args.qobjfile:
         if not os.path.isfile(qobj_path):
             print('Error: File "{0}" not exists'.format(qobj_path))
-            retcode = 2
             continue
 
-        print('Proccessing "{0}"...'.format(qobj_path))
+        print('Proccessing {0}'.format(qobj_path))
 
         if out_dir == '':
             out_dir = os.path.dirname(qobj_path)
@@ -147,6 +163,4 @@ if __name__ == "__main__":
             print('Error: Directory "{0}" not exists'.format(out_dir))
             sys.exit(1)
         
-        qobjgen(qobj_path, out_dir)
-
-    sys.exit(retcode)
+        qobjgen.generate(qobj_path, out_dir, suffix, args.replace)
