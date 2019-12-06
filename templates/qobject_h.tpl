@@ -12,7 +12,7 @@ class {{ cls.name }} : public {{ cls.base }}
 {% endfor %}
 
 public:
-    explicit {{ cls.name }}({{ cls.base }} *parent = nullptr);
+    explicit {{ cls.name }}(QObject *parent = nullptr);
 
 {% for prop in cls.props %}{% if prop.read %}
     {{ prop.type }} {{ prop.name }}() const;
@@ -25,7 +25,7 @@ signals:
 
 public slots:
 {% for prop in cls.props %}{% if prop.write %}
-    void set{{ prop.name|firstUpper }}(const {{ prop.type }} &{{ prop.name }});
+    void set{{ prop.name|firstUpper }}({% if '*' not in prop.type %}const {% endif %}{{ prop.type }} {% if '*' in prop.type %}const {% endif %}&{{ prop.name }});
 {% endif %}{% endfor %}
 
 private:

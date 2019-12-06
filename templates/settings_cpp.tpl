@@ -1,6 +1,6 @@
 #include "{{ cls.name|lower }}.h"
 
-{{ cls.name }}::{{ cls.name }}({{ cls.base }} *parent)
+{{ cls.name }}::{{ cls.name }}(QObject *parent)
     : {{ cls.base }}(parent)
 {
 

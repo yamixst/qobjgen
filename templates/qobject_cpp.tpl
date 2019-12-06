@@ -1,6 +1,6 @@
 #include "{{ cls.name|lower }}.h"
 
-{{ cls.name }}::{{ cls.name }}({{ cls.base }} *parent)
+{{ cls.name }}::{{ cls.name }}(QObject *parent)
     : {{ cls.base }}(parent)
 {
 
@@ -13,7 +13,7 @@
 }
 {% endif %}{% if prop.write %}
 
-void {{ cls.name }}::set{{ prop.name|firstUpper }}(const {{ prop.type }} &{{ prop.name }})
+void {{ cls.name }}::set{{ prop.name|firstUpper }}({% if '*' not in prop.type %}const {% endif %}{{ prop.type }} {% if '*' in prop.type %}const {% endif %}&{{ prop.name }})
 {
     if (m_{{ prop.name }} != {{ prop.name }}) {
         m_{{ prop.name }} = {{ prop.name }};

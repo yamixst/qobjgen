@@ -12,7 +12,7 @@ class {{ cls.name }} : public {{ cls.base }}
 {% endfor %}
 
 public:
-    explicit {{ cls.name }}({{ cls.base }} *parent = nullptr);
+    explicit {{ cls.name }}(QObject *parent = nullptr);
 
 {% for prop in cls.props %}
     {{ prop.type }} {{ prop.name }}() const;
