@@ -14,13 +14,14 @@ class {{ cls.name }} : public {{ cls.base }}
 public:
     explicit {{ cls.name }}(QObject *parent = nullptr);
 
+public slots:
+    void sync();
+    bool autoSync() const;
+    void setAutoSync(bool autoSync);
+
+public:
 {% for prop in cls.props %}
     {{ prop.type }} {{ prop.name }}() const;
-{% endfor %}
-
-signals:
-{% for prop in cls.props %}
-    void {{ prop.name }}Changed();
 {% endfor %}
 
 public slots:
@@ -28,8 +29,14 @@ public slots:
     void set{{ prop.name|firstUpper }}(const {{ prop.type }} &{{ prop.name }});
 {% endfor %}
 
+signals:
+{% for prop in cls.props %}
+    void {{ prop.name }}Changed();
+{% endfor %}
+
 private:
     QSettings m_settings;
+    bool m_autoSync = true;
 };
 
 #endif // {{ cls.name|upper }}_H
