@@ -134,7 +134,7 @@ if __name__ == "__main__":
     group = parser.add_mutually_exclusive_group(required=False)
     group.add_argument("--nosuffix", action='store_true')
     group.add_argument("--suffix",  default='.qobj')
-    parser.add_argument("-r", "--replace", action='store_true')
+    parser.add_argument("-f", "--force", action='store_true')
     parser.add_argument("-o", "--outdir", default='')
     parser.add_argument("qobjfile", nargs="+")
 
@@ -163,4 +163,4 @@ if __name__ == "__main__":
             print('Error: Directory "{0}" not exists'.format(out_dir))
             sys.exit(1)
         
-        qobjgen.generate(qobj_path, out_dir, suffix, args.replace)
+        qobjgen.generate(qobj_path, out_dir, suffix, args.force)

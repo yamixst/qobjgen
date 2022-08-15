@@ -1,4 +1,4 @@
-Usage: qobjgen.py [-h] [--tpldir TPLDIR] [--nosuffix | --suffix SUFFIX] [--replace]
+Usage: qobjgen.py [-h] [--tpldir TPLDIR] [--nosuffix | --suffix SUFFIX] [-f|--force]
                   [-o OUTDIR] QOBJFILE [QOBJFILE ...]
 
 Example:
